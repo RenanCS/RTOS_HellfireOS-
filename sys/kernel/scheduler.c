@@ -58,7 +58,7 @@ static void run_queue_next()
 static void async_queue_next()
 {
 	//Remove o nodo do topo
-	krnl_task = hf_queue_remhead(krnl_run_queue);
+	krnl_task = hf_queue_remhead(krnl_async_queue;
 	
 	if (!krnl_task)
 		panic(PANIC_NO_TASKS_ASYNC);
