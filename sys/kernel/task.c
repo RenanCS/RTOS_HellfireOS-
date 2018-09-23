@@ -267,7 +267,12 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 	if (krnl_task->pstack){
 		krnl_task->pstack[0] = STACK_MAGIC;
 		kprintf("\nKERNEL: [%s], id: %d, p:%d, c:%d, d:%d, addr: %x, sp: %x, ss: %d bytes", krnl_task->name, krnl_task->id, krnl_task->period, krnl_task->capacity, krnl_task->deadline, krnl_task->ptask, _get_task_sp(krnl_task->id), stack_size);
-		if (period){
+		
+		// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
+		//como aperiódica.
+		if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
+			if (hf_queue_addtail(krnl_async_queue, krnl_task)) panic(PANIC_CANT_PLACE_ASYNC);
+		}else if (period){
 			if (hf_queue_addtail(krnl_rt_queue, krnl_task)) panic(PANIC_CANT_PLACE_RT);
 		}else{
 			if (hf_queue_addtail(krnl_run_queue, krnl_task)) panic(PANIC_CANT_PLACE_RUN);
@@ -281,7 +286,7 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 	krnl_task = &krnl_tcb[krnl_current_task];
 	_ei(status);
 	
-	return i;
+	return i;	
 }
 
 /**
@@ -452,7 +457,22 @@ int32_t hf_kill(uint16_t id)
 	krnl_task->state = TASK_IDLE;
 	krnl_tasks--;
 
-	if (krnl_task->period){
+
+	// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
+	//como aperiódica.
+	if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
+		
+		/* ===== REVER ======= */
+		k = hf_queue_count(krnl_async_queue);
+		for (i = 0; i < k; i++)
+			if (hf_queue_get(krnl_async_queue, i) == krnl_task) break;
+		if (!k || i == k) panic(PANIC_NO_TASKS_ASYNC);
+		for (j = i; j > 0; j--)
+			if (hf_queue_swap(krnl_async_queue, j, j-1)) panic(PANIC_CANT_SWAP);
+		krnl_task2 = hf_queue_remhead(krnl_async_queue);
+		
+	}
+	else if (krnl_task->period){
 		k = hf_queue_count(krnl_rt_queue);
 		for (i = 0; i < k; i++)
 			if (hf_queue_get(krnl_rt_queue, i) == krnl_task) break;

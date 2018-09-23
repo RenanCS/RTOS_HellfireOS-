@@ -57,8 +57,9 @@ static void run_queue_next()
 /* =================================   CRIAR UMA NOVA QUEUE  ========================*/
 static void async_queue_next()
 {
-	//Remove o nodo do topo
-	krnl_task = hf_queue_remhead(krnl_async_queue;
+
+	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
+	krnl_task = hf_queue_remhead(krnl_async_queue);
 	
 	if (!krnl_task)
 		panic(PANIC_NO_TASKS_ASYNC);
@@ -129,6 +130,10 @@ void dispatch_isr(void *arg)
 		krnl_current_task = krnl_pcb.sched_rt();
 		
   		/* ================= MODIFICAR POR AQUI ==============*/
+		
+		// === um dispatcher para tarefas aperiódicas 
+		//		(verifique o dispatcher implementado em scheduler.c)
+
 		//Quando a tarefa atingir 0....
 		if (krnl_current_task == 0) {
 			krnl_current_task = krnl_pcb.sched_async();
@@ -181,12 +186,19 @@ int32_t sched_rr(void)
 
 
  /*====================== CRIAR O ESCALONAMENTO ASSINCRONO =========================*/
+ // === um escalonador (que gerencia uma fila circular de tarefas aperiódicas).
 int32_t sched_as(void)
 {
-	if (hf_queue_count(krnl_run_queue) == 0)
+	// === Verificar se existem tarefas aperiódicas na fila (com hf queue count()); 
+	//		Se não existirem retornar (continuar o escalonamento da próxima classe, melhor esforço);
+
+	if (hf_queue_count(krnl_async_queue) == 0)
 		panic(PANIC_NO_TASKS_RUN);
+	
 	do {
+		
 		async_queue_next();
+
 	} while (krnl_task->state == TASK_BLOCKED);
 
 	krnl_task->asjobs++;

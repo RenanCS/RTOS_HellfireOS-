@@ -88,6 +88,7 @@ static void clear_pcb(void)
 static void init_queues(void)
 {
 
+	// ==== inicializar a fila / lista junto com as outras já existentes;
 	krnl_async_queue = hf_queue_create(MAX_TASKS);
 	if (krnl_async_queue == NULL) panic(PANIC_OOM);
 

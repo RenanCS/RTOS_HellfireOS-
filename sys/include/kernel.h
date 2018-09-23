@@ -38,6 +38,7 @@ struct tcb_entry {
 	uint32_t rtjobs;				/*!< total RT task jobs executed */
 	uint32_t bgjobs;				/*!< total BE task jobs executed */
 
+	// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
 	uint32_t asjobs;				/*!< total BE task jobs executed */
 
 	uint32_t deadline_misses;			/*!< task realtime deadline misses */
@@ -58,6 +59,7 @@ struct pcb_entry {
 	int32_t (*sched_rt)();				/*!< pointer to the realtime scheduler */
 	int32_t (*sched_be)();				/*!< pointer to the best effort scheduler */
 
+	// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
 	int32_t (*sched_async)();				/*    */
 
 	uint32_t coop_cswitch;				/*!< cooperative context switches */
@@ -78,6 +80,7 @@ uint16_t krnl_tasks;					/*!< number of tasks in the system */
 uint16_t krnl_current_task;				/*!< the current running task id */
 uint16_t krnl_schedule;					/*!< scheduler enable / disable flag */
 
+// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
 struct queue *krnl_async_queue;				/*!< pointer to a queue of async tasks */
 
 struct queue *krnl_run_queue;				/*!< pointer to a queue of best effort tasks */
