@@ -136,7 +136,7 @@ void dispatch_isr(void *arg)
 
 		//Quando a tarefa atingir 0....
 		if (krnl_current_task == 0) {
-			krnl_current_task = krnl_pcb.sched_async();
+			krnl_current_task = krnl_pcb.sched_as();
 		}
 		else{
 			//Executa o melhor esforco

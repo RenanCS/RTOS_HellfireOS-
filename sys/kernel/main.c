@@ -75,9 +75,10 @@ static void clear_tcb(void)
 static void clear_pcb(void)
 {
 	/* setup callbacks for the schedulers */
-	krnl_pcb.sched_async = sched_as;
+	krnl_pcb.sched_as = sched_as;
 	krnl_pcb.sched_rt = sched_rma;
 	krnl_pcb.sched_be = sched_priorityrr;
+	
 	/* and clear the process control block */
 	krnl_pcb.coop_cswitch = 0;
 	krnl_pcb.preempt_cswitch = 0;
@@ -91,11 +92,10 @@ static void init_queues(void)
 	// ==== inicializar a fila / lista junto com as outras já existentes;
 	krnl_async_queue = hf_queue_create(MAX_TASKS);
 	if (krnl_async_queue == NULL) panic(PANIC_OOM);
-
 	krnl_run_queue = hf_queue_create(MAX_TASKS);
 	if (krnl_run_queue == NULL) panic(PANIC_OOM);
 	krnl_delay_queue = hf_queue_create(MAX_TASKS);
-	if (krnl_dhf_schedlockelay_queue == NULL) panic(PANIC_OOM);
+	if (krnl_delay_queue == NULL) panic(PANIC_OOM);
 	krnl_rt_queue = hf_queue_create(MAX_TASKS);
 	if (krnl_rt_queue == NULL) panic(PANIC_OOM);
 }

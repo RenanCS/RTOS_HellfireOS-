@@ -58,9 +58,8 @@ struct tcb_entry {
 struct pcb_entry {
 	int32_t (*sched_rt)();				/*!< pointer to the realtime scheduler */
 	int32_t (*sched_be)();				/*!< pointer to the best effort scheduler */
-
-	// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
-	int32_t (*sched_async)();				/*    */
+	
+	int32_t (*sched_as)();				/*    */
 
 	uint32_t coop_cswitch;				/*!< cooperative context switches */
 	uint32_t preempt_cswitch;			/*!< preeptive context switches */
