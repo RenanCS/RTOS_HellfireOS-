@@ -57,24 +57,21 @@ static void run_queue_next()
 /* =================================   CRIAR UMA NOVA QUEUE  ========================*/
 static void async_queue_next()
 {
+#if KERNEL_LOG >= 1
+	dprintf("async_queue_next => ");
+#endif
 
 	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
 	krnl_task = hf_queue_remhead(krnl_async_queue);
-	
-	if (!krnl_task)
-		panic(PANIC_NO_TASKS_ASYNC);
-	
-	//Se a tarefa  dif de bloqueada e aperiodica
-	if(krnl_task->state != TASK_BLOCKED && !krnl_task->period){
+	kprintf("\n ========== async_queue_next: %d ===========", krnl_task);
+
+	// === Verificar se existem tarefas aperiódicas na fila (com hf_queue_count()); 
+	if (hf_queue_count(krnl_run_queue) != 0){
 		
-		//Adiciona o nodo aperiodico no final da fila de aperiodica 
-		if (hf_queue_addtail(krnl_async_queue, krnl_task))
-			panic(PANIC_CANT_PLACE_ASYNC);
-			
+		/*FAZER A LÓGICA*/
 	}
 
 }
-
 /* =================================   FIM CRIAR UMA NOVA QUEUE  ========================*/
 
 
@@ -110,6 +107,8 @@ void dispatch_isr(void *arg)
 {
 	int32_t rc;
 
+	kprintf("\n ========== ENTROU NO dispatch_isr ===========");
+
 #if KERNEL_LOG >= 1
 	dprintf("dispatch %d ", (uint32_t)_read_us());
 #endif
@@ -126,20 +125,19 @@ void dispatch_isr(void *arg)
 	if (krnl_tasks > 0){
 		process_delay_queue();
 
+			
 		//Pega a tarefa atual (real time)
 		krnl_current_task = krnl_pcb.sched_rt();
+		kprintf("\n ========== Pega a tarefa atual (real time): %d ===========", krnl_current_task);
 		
-  		/* ================= MODIFICAR POR AQUI ==============*/
-		
-		// === um dispatcher para tarefas aperiódicas 
-		//		(verifique o dispatcher implementado em scheduler.c)
-
-		//Quando a tarefa atingir 0....
+		//Quando a tarefa atingir 0 verifica se existe aperiódica....
 		if (krnl_current_task == 0) {
+			kprintf("\n ========== verifica se existe aperiódica: %d ===========", krnl_current_task);
 			krnl_current_task = krnl_pcb.sched_as();
 		}
-		else{
-			//Executa o melhor esforco
+
+		//Caso não existe, então executa o melhor esforço	
+		if (krnl_current_task == 0) {
 			krnl_current_task = krnl_pcb.sched_be();
 		} 
 			
@@ -150,7 +148,7 @@ void dispatch_isr(void *arg)
 		krnl_pcb.preempt_cswitch++;
 
 #if KERNEL_LOG >= 1
-		dprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
+		kprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
 #endif
 		_context_restore(krnl_task->task_context, 1);
 		panic(PANIC_UNKNOWN);
@@ -177,10 +175,13 @@ int32_t sched_rr(void)
 {
 	if (hf_queue_count(krnl_run_queue) == 0)
 		panic(PANIC_NO_TASKS_RUN);
+
 	do {
 		run_queue_next();
 	} while (krnl_task->state == TASK_BLOCKED);
+	
 	krnl_task->bgjobs++;
+	
 	return krnl_task->id;
 }
 
@@ -189,14 +190,9 @@ int32_t sched_rr(void)
  // === um escalonador (que gerencia uma fila circular de tarefas aperiódicas).
 int32_t sched_as(void)
 {
-	// === Verificar se existem tarefas aperiódicas na fila (com hf queue count()); 
-	//		Se não existirem retornar (continuar o escalonamento da próxima classe, melhor esforço);
-
-	if (hf_queue_count(krnl_async_queue) == 0)
-		panic(PANIC_NO_TASKS_RUN);
-	
 	do {
 		
+		kprintf("\n ========== Escalonador Assincrono =========");
 		async_queue_next();
 
 	} while (krnl_task->state == TASK_BLOCKED);

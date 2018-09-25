@@ -79,7 +79,6 @@ uint16_t krnl_tasks;					/*!< number of tasks in the system */
 uint16_t krnl_current_task;				/*!< the current running task id */
 uint16_t krnl_schedule;					/*!< scheduler enable / disable flag */
 
-// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
 struct queue *krnl_async_queue;				/*!< pointer to a queue of async tasks */
 
 struct queue *krnl_run_queue;				/*!< pointer to a queue of best effort tasks */

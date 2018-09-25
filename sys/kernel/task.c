@@ -225,12 +225,13 @@ int32_t hf_priorityget(uint16_t id)
 int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t deadline, int8_t *name, uint32_t stack_size)
 {
 	volatile uint32_t status, i = 0;
-
 #if KERNEL_LOG == 2
 	dprintf("hf_spawn() %d ", (uint32_t)_read_us());
 #endif
-	if ((period < capacity) || (deadline < capacity))
-		return ERR_INVALID_PARAMETER;
+	
+	//Este trecho foi retirado para poder realizar ações assincronas
+	// if ((period < capacity) || (deadline < capacity))
+	// 	return ERR_INVALID_PARAMETER;
 	
 	status = _di();
 	while ((krnl_tcb[i].ptask != 0) && (i < MAX_TASKS))
@@ -271,6 +272,7 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 		// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
 		//como aperiódica.
 		if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
+			kprintf("\n ========== SPAWN tarefas aperiodicas ======== ");
 			if (hf_queue_addtail(krnl_async_queue, krnl_task)) panic(PANIC_CANT_PLACE_ASYNC);
 		}else if (period){
 			if (hf_queue_addtail(krnl_rt_queue, krnl_task)) panic(PANIC_CANT_PLACE_RT);
@@ -462,13 +464,17 @@ int32_t hf_kill(uint16_t id)
 	//como aperiódica.
 	if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
 		
-		/* ===== REVER ======= */
+		kprintf("\n ========== KILL tarefas aperiodicas ======== ");
+	
 		k = hf_queue_count(krnl_async_queue);
 		for (i = 0; i < k; i++)
 			if (hf_queue_get(krnl_async_queue, i) == krnl_task) break;
+	
 		if (!k || i == k) panic(PANIC_NO_TASKS_ASYNC);
+	
 		for (j = i; j > 0; j--)
 			if (hf_queue_swap(krnl_async_queue, j, j-1)) panic(PANIC_CANT_SWAP);
+	
 		krnl_task2 = hf_queue_remhead(krnl_async_queue);
 		
 	}

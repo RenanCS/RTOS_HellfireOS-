@@ -42,10 +42,12 @@ void panic(int32_t cause)
 	case PANIC_STACK_CORRUPT:	kprintf("stack is corrupted"); break;
 	case PANIC_NO_TASKS_LEFT:	kprintf("no more tasks left to dispatch"); break;
 	case PANIC_OOM:			kprintf("out of memory"); break;
+	case PANIC_NO_TASKS_ASYNC:	kprintf("no tasks on run async"); break;
 	case PANIC_NO_TASKS_RUN:	kprintf("no tasks on run queue"); break;
 	case PANIC_NO_TASKS_DELAY:	kprintf("no tasks on delay queue"); break;
 	case PANIC_NO_TASKS_RT:		kprintf("no tasks on realtime queue"); break;
 	case PANIC_UNKNOWN_TASK_STATE:	kprintf("task in unknown state"); break;
+	case PANIC_CANT_PLACE_ASYNC:	kprintf("can't place task on async queue"); break;
 	case PANIC_CANT_PLACE_RUN:	kprintf("can't place task on run queue"); break;
 	case PANIC_CANT_PLACE_DELAY:	kprintf("can't place task on delay queue"); break;
 	case PANIC_CANT_PLACE_RT:	kprintf("can't place task on real time queue"); break;

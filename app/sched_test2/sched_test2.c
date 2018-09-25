@@ -5,6 +5,7 @@ void task(void){
 	
 	id = hf_selfid();
 	for(;;){
+		delay_ms(50);
 		jobs = hf_jobs(id);
 		printf("\n%s (%d)[%d][%d]", hf_selfname(), id, hf_jobs(id), hf_dlm(id));
 		while (jobs == hf_jobs(id));
