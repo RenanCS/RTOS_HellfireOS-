@@ -271,6 +271,7 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 		
 		// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
 		//como aperiódica.
+		
 		if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
 			kprintf("\n ========== SPAWN tarefas aperiodicas ======== ");
 			if (hf_queue_addtail(krnl_async_queue, krnl_task)) panic(PANIC_CANT_PLACE_ASYNC);

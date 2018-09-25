@@ -61,14 +61,41 @@ static void async_queue_next()
 	dprintf("async_queue_next => ");
 #endif
 
-	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
-	krnl_task = hf_queue_remhead(krnl_async_queue);
-	kprintf("\n ========== async_queue_next: %d ===========", krnl_task);
+	int32_t i,j,k;
+	struct tcb_entry *e1, *e2;
+	
+	//Verificar se existem tarefas aperiódicas na fila (com hf_queue_count());
+	k = hf_queue_count(krnl_async_queue);
+	kprintf("\n ========== QTD task async (async_queue_next): %d ===========", k);
 
-	// === Verificar se existem tarefas aperiódicas na fila (com hf_queue_count()); 
-	if (hf_queue_count(krnl_run_queue) != 0){
+	//Se não existirem, retornar (continuar o escalonamento da próxima classe, melhor esforço);
+	if (k == 0)
+		return 0;
+
+	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
+	e1 = hf_queue_get(krnl_async_queue, 0);	
+	kprintf("\n ========== Existe tarefa aperiódica na primeira posição: %d ===========", e1);
+	
+	
+	//COMO SABER SE EXISTEM JOBS?	
+	if(e1->bgjobs > 0){
+		kprintf("\n ========== Existem JOBS na tarefa aperiódica: %d ===========", e1->bgjobs);
 		
-		/*FAZER A LÓGICA*/
+		//DECREMENTAR O JOBS DENTRO DA ITERAÇÃO?
+		e1->bgjobs--;
+		
+		//COMO ESCALONAR ESTA TASK?
+		return e1->id;
+	}
+	else{
+		//Remove da fila e da um hf kill() na task aperiódica;
+		e2 = hf_queue_remhead(krnl_async_queue);
+		kprintf("\n ========== Remove da fila de tarefas: %d ===========", e2);
+		
+		hf_kill(e2->id);
+		kprintf("\n ========== Kill da tarefa: %d ===========", e2->id);
+		
+		return e2->id;
 	}
 
 }
@@ -192,7 +219,7 @@ int32_t sched_as(void)
 {
 	do {
 		
-		kprintf("\n ========== Escalonador Assincrono =========");
+		kprintf("\n ========== Escalonador Assincrono (sched_as) =========");
 		async_queue_next();
 
 	} while (krnl_task->state == TASK_BLOCKED);
@@ -221,9 +248,11 @@ int32_t sched_lottery(void)
 	r = random() % krnl_tasks;
 	if (hf_queue_count(krnl_run_queue) == 0)
 		panic(PANIC_NO_TASKS_RUN);
+
 	do {
 		run_queue_next();
 	} while ((krnl_task->state == TASK_BLOCKED) || ((i++ % krnl_tasks) != r));
+	
 	krnl_task->bgjobs++;
 
 	return krnl_task->id;
