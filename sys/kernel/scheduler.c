@@ -63,40 +63,42 @@ static void async_queue_next()
 
 	int32_t i,j,k;
 	struct tcb_entry *e1, *e2;
+	uint16_t id = 0;
 	
 	//Verificar se existem tarefas aperiódicas na fila (com hf_queue_count());
 	k = hf_queue_count(krnl_async_queue);
-	kprintf("\n ========== QTD task async (async_queue_next): %d ===========", k);
+	//kprintf("\n ========== QTD task async (async_queue_next): %d ===========", k);
 
 	//Se não existirem, retornar (continuar o escalonamento da próxima classe, melhor esforço);
 	if (k == 0)
 		return 0;
 
+	int idx = 0;
 	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
-	e1 = hf_queue_get(krnl_async_queue, 0);	
-	kprintf("\n ========== Existe tarefa aperiódica na primeira posição: %d ===========", e1);
+	do{
+		
+		e1 = hf_queue_get(krnl_async_queue, idx);	
+		idx++;
+
+		
+		if (e1->state != TASK_BLOCKED && e1->capacity_rem > 0){
+			//kprintf("\n ========== Existe tarefa aperiódica na primeira posição: %d ===========", e1);
+			krnl_task = e1;
+			--e1->capacity_rem;
+			idx = -1;
+			
+		}
+
+		if (e1->capacity_rem == 0){
+			//kprintf("\n ========== KILL TASK ===========");
+			e2 = hf_queue_remhead(krnl_async_queue);
+			hf_kill(e2->id);
+		}
 	
+		
+	}while(e1->state != TASK_BLOCKED && e1->capacity_rem > 0 && idx > 0 && idx < k);
+
 	
-	//COMO SABER SE EXISTEM JOBS?	
-	if(e1->bgjobs > 0){
-		kprintf("\n ========== Existem JOBS na tarefa aperiódica: %d ===========", e1->bgjobs);
-		
-		//DECREMENTAR O JOBS DENTRO DA ITERAÇÃO?
-		e1->bgjobs--;
-		
-		//COMO ESCALONAR ESTA TASK?
-		return e1->id;
-	}
-	else{
-		//Remove da fila e da um hf kill() na task aperiódica;
-		e2 = hf_queue_remhead(krnl_async_queue);
-		kprintf("\n ========== Remove da fila de tarefas: %d ===========", e2);
-		
-		hf_kill(e2->id);
-		kprintf("\n ========== Kill da tarefa: %d ===========", e2->id);
-		
-		return e2->id;
-	}
 
 }
 /* =================================   FIM CRIAR UMA NOVA QUEUE  ========================*/
@@ -134,7 +136,7 @@ void dispatch_isr(void *arg)
 {
 	int32_t rc;
 
-	kprintf("\n ========== ENTROU NO dispatch_isr ===========");
+	//kprintf("\n ========== ENTROU NO dispatch_isr ===========");
 
 #if KERNEL_LOG >= 1
 	dprintf("dispatch %d ", (uint32_t)_read_us());
@@ -155,12 +157,13 @@ void dispatch_isr(void *arg)
 			
 		//Pega a tarefa atual (real time)
 		krnl_current_task = krnl_pcb.sched_rt();
-		kprintf("\n ========== Pega a tarefa atual (real time): %d ===========", krnl_current_task);
+		//kprintf("\n ========== Pega a tarefa atual (real time): %d ===========", krnl_current_task);
 		
 		//Quando a tarefa atingir 0 verifica se existe aperiódica....
 		if (krnl_current_task == 0) {
-			kprintf("\n ========== verifica se existe aperiódica: %d ===========", krnl_current_task);
+			//kprintf("\n ========== verifica se existe aperiódica: %d ===========", krnl_current_task);
 			krnl_current_task = krnl_pcb.sched_as();
+			//hf_kill(krnl_current_task);
 		}
 
 		//Caso não existe, então executa o melhor esforço	
@@ -175,7 +178,7 @@ void dispatch_isr(void *arg)
 		krnl_pcb.preempt_cswitch++;
 
 #if KERNEL_LOG >= 1
-		kprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
+		//kprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
 #endif
 		_context_restore(krnl_task->task_context, 1);
 		panic(PANIC_UNKNOWN);
@@ -219,7 +222,7 @@ int32_t sched_as(void)
 {
 	do {
 		
-		kprintf("\n ========== Escalonador Assincrono (sched_as) =========");
+		//kprintf("\n ========== Escalonador Assincrono (sched_as) =========");
 		async_queue_next();
 
 	} while (krnl_task->state == TASK_BLOCKED);
