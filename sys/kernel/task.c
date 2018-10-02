@@ -126,6 +126,9 @@ int32_t hf_jobs(uint16_t id)
 		if (krnl_tcb[id].ptask){
 			if (krnl_tcb[id].period)
 				return krnl_tcb[id].rtjobs;
+				//=========================================
+			if (krnl_tcb[id].capacity)
+				return krnl_tcb[id].asjobs;
 			else
 				return krnl_tcb[id].bgjobs;
 		}
@@ -273,7 +276,6 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 		//como aperiódica.
 		
 		if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
-			kprintf("\n ========== SPAWN tarefas aperiodicas ======== ");
 			if (hf_queue_addtail(krnl_async_queue, krnl_task)) panic(PANIC_CANT_PLACE_ASYNC);
 		}else if (period){
 			if (hf_queue_addtail(krnl_rt_queue, krnl_task)) panic(PANIC_CANT_PLACE_RT);
@@ -465,16 +467,16 @@ int32_t hf_kill(uint16_t id)
 	//como aperiódica.
 	if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
 		
-		kprintf("\n ========== KILL tarefas aperiodicas ======== ");
-	
+		//kprintf("\n ========== KILL tarefas aperiodicas ======== ");
 		k = hf_queue_count(krnl_async_queue);
 		for (i = 0; i < k; i++)
 			if (hf_queue_get(krnl_async_queue, i) == krnl_task) break;
 	
-		if (!k || i == k) panic(PANIC_NO_TASKS_ASYNC);
+		kprintf("\n ========== KILL k:%d i:%d  ======== ",k, i);
+		if (!k || (i == k)  ) panic(PANIC_NO_TASKS_ASYNC);
 	
-		for (j = i; j > 0; j--)
-			if (hf_queue_swap(krnl_async_queue, j, j-1)) panic(PANIC_CANT_SWAP);
+		// for (j = i; j > 0; j--)
+		// 	if (hf_queue_swap(krnl_async_queue, j, j-1)) panic(PANIC_CANT_SWAP);
 	
 		krnl_task2 = hf_queue_remhead(krnl_async_queue);
 		
