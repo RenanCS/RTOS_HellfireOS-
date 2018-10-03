@@ -126,7 +126,9 @@ int32_t hf_jobs(uint16_t id)
 		if (krnl_tcb[id].ptask){
 			if (krnl_tcb[id].period)
 				return krnl_tcb[id].rtjobs;
-				//=========================================
+			
+			//Incluímos a possibilida de retorna da quantidade 
+			//de jobs executados pela task
 			if (krnl_tcb[id].capacity)
 				return krnl_tcb[id].asjobs;
 			else
@@ -463,21 +465,17 @@ int32_t hf_kill(uint16_t id)
 	krnl_tasks--;
 
 
-	// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
-	//como aperiódica.
+	//Verifica se a tarefa é aperiódica
 	if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
 		
-		//kprintf("\n ========== KILL tarefas aperiodicas ======== ");
+		//Busca quantidade de tarefas aperiódicas para serem executadas
 		k = hf_queue_count(krnl_async_queue);
 		for (i = 0; i < k; i++)
 			if (hf_queue_get(krnl_async_queue, i) == krnl_task) break;
 	
-		kprintf("\n ========== KILL k:%d i:%d  ======== ",k, i);
 		if (!k || (i == k)  ) panic(PANIC_NO_TASKS_ASYNC);
 	
-		// for (j = i; j > 0; j--)
-		// 	if (hf_queue_swap(krnl_async_queue, j, j-1)) panic(PANIC_CANT_SWAP);
-	
+		//Remove a task do topo 
 		krnl_task2 = hf_queue_remhead(krnl_async_queue);
 		
 	}

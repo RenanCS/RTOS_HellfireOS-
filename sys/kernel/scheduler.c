@@ -53,60 +53,6 @@ static void run_queue_next()
 }
 
 
-
-/* =================================   CRIAR UMA NOVA QUEUE  ========================*/
-static void async_queue_next()
-{
-// #if KERNEL_LOG >= 1
-// 	dprintf("async_queue_next => ");
-// #endif
-
-// 	int32_t i,j,k;
-// 	struct tcb_entry *e1, *e2;
-// 	uint16_t id = 0;
-	
-
-// 	// //Verificar se existem tarefas aperiódicas na fila (com hf_queue_count());
-// 	// k = hf_queue_count(krnl_async_queue);
-// 	// //kprintf("\n ========== QTD task async (async_queue_next): %d ===========", k);
-
-// 	// //Se não existirem, retornar (continuar o escalonamento da próxima classe, melhor esforço);
-// 	// if (k == 0)
-// 	// 	return 0;
-
-
-
-// 	int idx = 0;
-// 	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
-// 	do{
-		
-// 		e1 = hf_queue_get(krnl_async_queue, idx);	
-		
-// 		if (e1->state != TASK_BLOCKED && e1->capacity_rem > 0){
-// 			//kprintf("\n ========== Existe tarefa aperiódica na primeira posição: %d ===========", e1);
-// 			krnl_task = e1;
-// 			--e1->capacity_rem;
-// 			break;
-// 		}
-
-// 		if (e1->capacity_rem == 0){
-// 			//kprintf("\n ========== KILL TASK ===========");
-// 			//e2 = hf_queue_get(krnl_async_queue,idx);
-
-// 			hf_kill(e1->id);
-// 		}
-
-// 		idx++;
-	
-		
-// 	}while(e1->state != TASK_BLOCKED && e1->capacity_rem > 0 );
-	
-
-}
-/* =================================   FIM CRIAR UMA NOVA QUEUE  ========================*/
-
-
-
 static void rt_queue_next()
 {
 	krnl_task = hf_queue_remhead(krnl_rt_queue);
@@ -157,11 +103,10 @@ void dispatch_isr(void *arg)
 		process_delay_queue();
 
 			
-		//Pega a tarefa atual (real time)
+		//Busca a tarefa atual (real time)
 		krnl_current_task = krnl_pcb.sched_rt();
-		//kprintf("\n ========== Pega a tarefa atual (real time): %d ===========", krnl_current_task);
 		
-		//Quando a tarefa atingir 0 verifica se existe aperiódica....
+		//Verifica se exite tarefa aperiódica
 		if (krnl_current_task == 0) {
 			krnl_current_task = krnl_pcb.sched_as();
 		}
@@ -174,7 +119,7 @@ void dispatch_isr(void *arg)
 		//Atualiza o status
 		krnl_task->state = TASK_RUNNING;
 
-		//Informa que vai realizar interrupcoes preemptivas
+		//Informa que vai realizar interrupções preemptivas
 		krnl_pcb.preempt_cswitch++;
 
 #if KERNEL_LOG >= 1
@@ -217,16 +162,13 @@ int32_t sched_rr(void)
 
 
  /*====================== CRIAR O ESCALONAMENTO ASSINCRONO =========================*/
- // === um escalonador (que gerencia uma fila circular de tarefas aperiódicas).
-int32_t sched_as(void)
+ int32_t sched_as(void)
 {
-
 	int32_t i,j;
 	struct tcb_entry *e1;
 
 	//Verificar se existem tarefas aperiódicas na fila (com hf_queue_count());
 	int k = hf_queue_count(krnl_async_queue);
-	//kprintf("\n ========== QTD task async (async_queue_next): %d ===========", k);
 
 	//Se não existirem, retornar (continuar o escalonamento da próxima classe, melhor esforço);
 	if (k == 0)
@@ -236,20 +178,18 @@ int32_t sched_as(void)
 	//Existem tarefas aperiódicas, então deve-se pegar a primeira da fila (com hf queue get())
 	do{
 		
+		//Obtém a referência da task na posição indicada idx
 		e1 = hf_queue_get(krnl_async_queue, idx);	
 		
-		kprintf("\n ========== capacity_rem task async (async_queue_next): %d ===========", e1->capacity_rem);
+		//Caso a task não estja bloqueada e tenha capacity
 		if (e1->state != TASK_BLOCKED && e1->capacity_rem > 0){
-			//kprintf("\n ========== Existe tarefa aperiódica na primeira posição: %d ===========", e1);
 			krnl_task = e1;
 			--e1->capacity_rem;
 			break;
 		}
 
+		//Se não tem mais capacity, matar a task
 		if (e1->capacity_rem == 0){
-			kprintf("\n ========== KILL TASK ===========");
-			//e2 = hf_queue_get(krnl_async_queue,idx);
-
 			hf_kill(e1->id);
 		}
 
@@ -258,10 +198,9 @@ int32_t sched_as(void)
 		
 	}while(e1->state != TASK_BLOCKED && e1->capacity_rem > 0 );
 
-kprintf("\n ========== SAIU: %d ===========", krnl_task->capacity_rem);
-		
-
+	//Incremente o job da task 
 	krnl_task->asjobs++;
+
 	return krnl_task->id;
 }
  /*====================== FIM DO ESCALONAMENTO ASSINCRONO =========================*/

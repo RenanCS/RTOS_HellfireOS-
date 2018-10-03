@@ -3,19 +3,19 @@ image.elf: formato do arquivo elf32-bigmips
 
 Seções:
 Idx Tamanho do Nome do Arquivo VMA LMA sem Algn
-  0 .text         00002fc4  40000000  40000000  00001000  2**2
+  0 .text         000030d8  40000000  40000000  00001000  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .rodata       000009c8  40002fc4  40002fc4  00003fc4  2**2
+  1 .rodata       00000918  400030d8  400030d8  000040d8  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  2 .data         00000014  4000398c  4000398c  0000498c  2**2
+  2 .data         00000010  400039f0  400039f0  000049f0  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  3 .bss          0007b440  400039a0  400039a0  000049a0  2**3
+  3 .bss          0007b440  40003a00  40003a00  00004a00  2**3
                   ALLOC
-  4 .scommon      00000030  4007ede0  4007ede0  000049a0  2**2
+  4 .scommon      00000030  4007ee40  4007ee40  00004a00  2**2
                   ALLOC
-  5 .reginfo      00000018  00000000  00000000  000049a0  2**2
+  5 .reginfo      00000018  00000000  00000000  00004a00  2**2
                   CONTENTS, READONLY, LINK_ONCE_SAME_SIZE
-  6 .comment      00000011  00000000  00000000  000049b8  2**0
+  6 .comment      00000011  00000000  00000000  00004a18  2**0
                   CONTENTS, READONLY
-  7 .gnu.attributes 00000010  00000000  00000000  000049c9  2**0
+  7 .gnu.attributes 00000010  00000000  00000000  00004a29  2**0
                   CONTENTS, READONLY
