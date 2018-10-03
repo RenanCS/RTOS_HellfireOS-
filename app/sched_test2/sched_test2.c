@@ -3,17 +3,52 @@
 void task(void)
 {
 	int32_t jobs, id;
-
 	id = hf_selfid();
 	for (;;)
 	{
-
 		jobs = hf_jobs(id);
 		printf("\n%s (%d)[%d][%d]", hf_selfname(), id, hf_jobs(id), hf_dlm(id));
 		while (jobs == hf_jobs(id))
 			;
 	}
 }
+
+
+
+void task_Ap(void)
+{
+	int32_t jobs, id;
+	id = hf_selfid();
+	for (;;)
+	{
+		jobs = hf_jobs(id);	
+		printf("\n%s (%d)[%d][%d]", hf_selfname(), id, hf_jobs(id), hf_dlm(id));
+		while (jobs == hf_jobs(id))
+		;
+	}
+}
+
+
+void task_be(void)
+{
+	int32_t jobs, id;
+
+	id = hf_selfid();
+	for (;;)
+	{
+		int _rand = 50 + ((random() % 499) +1);
+		
+		delay_ms(_rand);
+
+		hf_spawn(task_Ap, 0, 2, 0, "task aperiodica", 2048);
+		jobs = hf_jobs(id);
+		printf("\n%s (%d)[%d][%d]", hf_selfname(), id, hf_jobs(id), hf_dlm(id));
+
+		while (jobs == hf_jobs(id))
+		;
+	}
+}
+
 
 void app_main(void)
 {
@@ -31,17 +66,14 @@ void app_main(void)
 	//Teste sugerido (professor)
 
 	int count = 5;
-	uint64_t timeInit;
-	uint64_t timeEnd;
+	uint64_t timerInit;
+	uint64_t timerEnd;
 	
-	hf_spawn(task, 4, 2, 4, "task 01", 2048);
-	delay_ms(1000);
-	timeInit = _read_us();
+	timerInit = _read_us();
 
-	hf_spawn(task, 0, ((random() % 3) + 1), 0, "task aperiodica", 2048);
-	delay_ms(1000);
-
-
+	hf_spawn(task, 4, 2, 4, "task a", 2048);
+	hf_spawn(task_be, 0, 0, 0, "task be", 2048);
+	
 	// while (count)
 	// {
 	// 	time = _read_us();
