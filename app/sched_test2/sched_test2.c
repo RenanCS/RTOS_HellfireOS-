@@ -31,19 +31,24 @@ void app_main(void)
 	//Teste sugerido (professor)
 
 	int count = 5;
-	uint64_t time;
+	uint64_t timeInit;
+	uint64_t timeEnd;
 	
 	hf_spawn(task, 4, 2, 4, "task 01", 2048);
 	delay_ms(1000);
+	timeInit = _read_us();
 
-	while (count)
-	{
-		time = _read_us();
-		hf_spawn(task, 0, ((random() % 3) + 1), 0, "task aperiodica", 2048);
-		count--;
-	}
-
+	hf_spawn(task, 0, ((random() % 3) + 1), 0, "task aperiodica", 2048);
 	delay_ms(1000);
+
+
+	// while (count)
+	// {
+	// 	time = _read_us();
+	// 	hf_spawn(task, 0, ((random() % 3) + 1), 0, "task aperiodica", 2048);
+	// 	count--;
+	// }
+
 		
 	// hf_spawn(task, 3, 2, 3, "task", 2048);
 	// hf_spawn(task, 0, 5, 0, "task aperiodica 1", 2048);
