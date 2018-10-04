@@ -40,6 +40,8 @@ struct tcb_entry {
 
 	// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
 	uint32_t asjobs;				/*!< total BE task jobs executed */
+	uint32_t timerini;					/*!< delay to enter in the run/RT queue */
+	uint32_t timerfim;					/*!< delay to enter in the run/RT queue */
 
 	uint32_t deadline_misses;			/*!< task realtime deadline misses */
 	uint16_t period;				/*!< task period */
@@ -72,6 +74,7 @@ struct pcb_entry {
  * @brief The task control block and processor control block
  */
 struct tcb_entry krnl_tcb[MAX_TASKS];
+
 struct pcb_entry krnl_pcb;
 
 struct tcb_entry *krnl_task;				/*!< pointer to a task control block entry */

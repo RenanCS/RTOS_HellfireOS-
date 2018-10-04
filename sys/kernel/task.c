@@ -14,6 +14,7 @@
  * 
  */
 
+
 #include <hal.h>
 #include <libc.h>
 #include <kprintf.h>
@@ -274,11 +275,13 @@ int32_t hf_spawn(void (*task)(), uint16_t period, uint16_t capacity, uint16_t de
 		krnl_task->pstack[0] = STACK_MAGIC;
 		kprintf("\nKERNEL: [%s], id: %d, p:%d, c:%d, d:%d, addr: %x, sp: %x, ss: %d bytes", krnl_task->name, krnl_task->id, krnl_task->period, krnl_task->capacity, krnl_task->deadline, krnl_task->ptask, _get_task_sp(krnl_task->id), stack_size);
 		
-		// === uma tarefa que possui perı́odo e deadline == 0, mas possui capacidade > 0 é definida
-		//como aperiódica.
-		
 		if(krnl_task->period == 0 && krnl_task->deadline == 0 && krnl_task->capacity > 0){
+
+			krnl_task->timerini = _read_us();
+			krnl_task->timerfim =0;
+
 			if (hf_queue_addtail(krnl_async_queue, krnl_task)) panic(PANIC_CANT_PLACE_ASYNC);
+
 		}else if (period){
 			if (hf_queue_addtail(krnl_rt_queue, krnl_task)) panic(PANIC_CANT_PLACE_RT);
 		}else{

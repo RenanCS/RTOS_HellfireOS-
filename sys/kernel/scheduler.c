@@ -22,6 +22,9 @@
 #include <panic.h>
 #include <scheduler.h>
 
+int timers[100]; 
+int idxTimer = 0;
+
 static void process_delay_queue(void)
 {
 	int32_t i, k;
@@ -84,8 +87,6 @@ void dispatch_isr(void *arg)
 {
 	int32_t rc;
 
-	//kprintf("\n ========== ENTROU NO dispatch_isr ===========");
-
 #if KERNEL_LOG >= 1
 	dprintf("dispatch %d ", (uint32_t)_read_us());
 #endif
@@ -108,6 +109,7 @@ void dispatch_isr(void *arg)
 		
 		//Verifica se exite tarefa aperiódica
 		if (krnl_current_task == 0) {
+
 			krnl_current_task = krnl_pcb.sched_as();
 		}
 
@@ -123,7 +125,7 @@ void dispatch_isr(void *arg)
 		krnl_pcb.preempt_cswitch++;
 
 #if KERNEL_LOG >= 1
-		//kprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
+		dprintf("\n%d %d %d %d %d ", krnl_current_task, krnl_task->period, krnl_task->capacity, krnl_task->deadline, (uint32_t)_read_us());
 #endif
 		_context_restore(krnl_task->task_context, 1);
 		panic(PANIC_UNKNOWN);
@@ -181,6 +183,39 @@ int32_t sched_rr(void)
 		//Obtém a referência da task na posição indicada idx
 		e1 = hf_queue_get(krnl_async_queue, idx);	
 		
+
+		if(e1->timerfim == 0){
+
+			e1->timerfim = _read_us();
+			timers[idxTimer] = e1->timerfim  - e1->timerini;
+			
+			kprintf("\n DELAY_TASK %d", timers[idxTimer]);
+			
+			idxTimer++;
+
+			if(idxTimer > 1){
+				int idelay = 0;
+				int maiorDelay = timers[0];
+				int menorDelay = timers[1];
+
+				for (idelay = 0; idelay < idxTimer; idelay++){
+					
+					if(maiorDelay < timers[idelay] ){
+						maiorDelay = timers[idelay];
+					}
+
+					if(menorDelay > timers[idelay]){
+						menorDelay = timers[idelay];
+					}
+				}
+
+				int diffTimers = maiorDelay - menorDelay;
+				kprintf("\n JITTER_Timers %d", diffTimers);
+			}
+
+
+		}
+
 		//Caso a task não estja bloqueada e tenha capacity
 		if (e1->state != TASK_BLOCKED && e1->capacity_rem > 0){
 			krnl_task = e1;
@@ -251,7 +286,7 @@ int32_t sched_priorityrr(void)
 	int32_t i, k;
 	uint8_t highestp = 255;
 	struct tcb_entry *krnl_task2 = NULL;
-	
+
 	k = hf_queue_count(krnl_run_queue);
 	if (k == 0)
 		panic(PANIC_NO_TASKS_RUN);
@@ -284,7 +319,7 @@ int32_t sched_priorityrr(void)
 	krnl_task->priority_rem = krnl_task->priority;
 done:
 	krnl_task->bgjobs++;
-	
+
 	return krnl_task->id;
 }
 
