@@ -26,7 +26,6 @@
  * @brief Task control block (TCB) and processor control block (PCB) entry data structures.
  */
 
- /* ================== CRIAR ASYNC TASK =========    */
 struct tcb_entry {
 	uint16_t id;					/*!< task id */
 	int8_t name[20];				/*!< task description (or name) */
@@ -35,13 +34,13 @@ struct tcb_entry {
 	uint8_t priority_rem;				/*!< remaining priority */
 	uint8_t critical;				/*!< critical event, interrupt request */
 	uint32_t delay;					/*!< delay to enter in the run/RT queue */
+
 	uint32_t rtjobs;				/*!< total RT task jobs executed */
 	uint32_t bgjobs;				/*!< total BE task jobs executed */
+	uint32_t asjobs;				/*!< total apediodic task jobs executed */
 
-	// ==== adicionar um ponteiro para a fila ou lista de tarefas aperiódicas;
-	uint32_t asjobs;				/*!< total BE task jobs executed */
-	uint32_t timerini;					/*!< delay to enter in the run/RT queue */
-	uint32_t timerfim;					/*!< delay to enter in the run/RT queue */
+	uint32_t timerini;					/*!< delay to enter in the aperiodic queue */
+	uint32_t timerfim;					/*!< delay to enter in the aperiodic queue */
 
 	uint32_t deadline_misses;			/*!< task realtime deadline misses */
 	uint16_t period;				/*!< task period */
@@ -56,12 +55,11 @@ struct tcb_entry {
 	void *other_data;				/*!< pointer to other data related to this task */
 };
 
-/* =================  ADICIONAR O SCHED ASYNC ==============*/
 struct pcb_entry {
+	
 	int32_t (*sched_rt)();				/*!< pointer to the realtime scheduler */
 	int32_t (*sched_be)();				/*!< pointer to the best effort scheduler */
-	
-	int32_t (*sched_as)();				/*    */
+	int32_t (*sched_as)();				/*!< pointer to the aperiodic scheduler */
 
 	uint32_t coop_cswitch;				/*!< cooperative context switches */
 	uint32_t preempt_cswitch;			/*!< preeptive context switches */

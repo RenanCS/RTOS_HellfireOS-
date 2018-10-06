@@ -113,7 +113,7 @@ void dispatch_isr(void *arg)
 			krnl_current_task = krnl_pcb.sched_as();
 		}
 
-		//Caso não existe, então executa o melhor esforço	
+		//Após segue o fluxo normal
 		if (krnl_current_task == 0) {
 			krnl_current_task = krnl_pcb.sched_be();
 		} 
